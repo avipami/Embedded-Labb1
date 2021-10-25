@@ -8,46 +8,40 @@ void uart_init(unsigned int baud, int highSpeed)
     if (highSpeed != 0)
     {
         speed = 8;
-        UCSR0A |= 1 << U2X0; /* Enables high speed*/
+        UCSR0A |= 1 << U2X0; /* Enables high speed */
     }
 
     //baud = (F_CPU/(speed*baud)) -1;
 
+    UBRR0L = (uint8_t)(baud & 0x00FF);
     UBRR0H = (uint8_t)(baud  >> 8);
-    UBRR0L = (baud & 0x00FF);
+    
        /* Baud Reg set */
 
     UCSR0B = (1<<RXEN0)|(1<<TXEN0);     /* Enable receiver and transmitter */ 
-    UCSR0C = (1<<USBS0)|(3<<UCSZ00);    /* Set frame format: 8data, 2stop bit */ 
+    UCSR0C = (1<<USBS0)|(3<<UCSZ00);    /* Set frame format: 8data, 2stop bit Async mode on*/ 
 }
 
-void uart_tx(unsigned char chr)
+void uart_txchr(unsigned char chr)
 {
     /* Wait for empty transmit buffer */
-    while (!(UCSR0A & (1<<UDRE0)));
-
-    if(chr == '\n')
-    {
-        chr = '\r';
-    }
+    while ((UCSR0A & (1<<UDRE0))==0);
     /* Put data into buffer, sends the data */ 
     UDR0 = chr;
 }
 void uart_putstr(const char *str)
 {
-    int i = 0;
-    while (str[i] != '\0')
+    while (*str > 0)
     {
-        uart_tx(str[i]);
-        i ++ ;
+        uart_txchr(*str++);
     }
     
 }
 
 char uart_getchar(void)
 {
- while ( !(UCSR0A & (1<<RXC0)) ) // If not UCSRnA register port RXCn is 1 when and:ing (1<<RXCn) wait.
-;
+ while ( !(UCSR0A & (1<<RXC0))); // If not UCSRnA register port RXCn is 1 when and:ing (1<<RXCn) wait.
+
 /* Get and return received data from buffer */
 return UDR0;
 }
