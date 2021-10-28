@@ -9,13 +9,13 @@ int main()
 {
     char name[] = "ON";
     char buffer[20];
-    uart_init(MYBAUD ,0);
+    uart_init(MYBAUD ,0); // setup the uart speed and potential double speed tx/rx for future iteration
     leds_init();
 
     while(SpinMeRoundRoundBabyRoundRound)
     {
-       uart_getstr(&buffer);
-       uart_ledcontrl(&buffer);
+       uart_getstr(&buffer);//reads from serial
+       uart_ledcontrl(&buffer);//uses input to perform command
     }
     return 0;
 }
