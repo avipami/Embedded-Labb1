@@ -65,7 +65,7 @@ void uart_getstr(char *buffer)
     buffer[i] = '\n'; // insert a new line to array
     buffer[i + 1] = '\0';
 }
-void uart_echo(void)
+void uart_echo(void) //not necessary in this iteration
 {
     uart_putchar(uart_getchar());   
 }
