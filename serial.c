@@ -1,6 +1,7 @@
 #include <avr/io.h>
 #include <avr/interrupt.h>
 #include "serial.h"
+#include "leds.h"
 
 void uart_init(unsigned int baud, int highSpeed)
 {
@@ -10,9 +11,6 @@ void uart_init(unsigned int baud, int highSpeed)
         speed = 8;
         UCSR0A |= 1 << U2X0; /* Enables high speed */
     }
-
-    //baud = (F_CPU/(speed*baud)) -1;
-
     UBRR0L = (uint8_t)(baud & 0x00FF);
     UBRR0H = (uint8_t)(baud  >> 8);
     
@@ -22,31 +20,52 @@ void uart_init(unsigned int baud, int highSpeed)
     UCSR0C = (1<<USBS0)|(3<<UCSZ00);    /* Set frame format: 8data, 2stop bit Async mode on*/ 
 }
 
-void uart_txchr(unsigned char chr)
+void uart_putchar(unsigned char chr)
 {
     /* Wait for empty transmit buffer */
-    while ((UCSR0A & (1<<UDRE0))==0);
-    /* Put data into buffer, sends the data */ 
-    UDR0 = chr;
+    while ((UCSR0A & (1<<UDRE0))== 0);
+    UDR0 = chr; // print to serial screen
 }
-void uart_putstr(const char *str)
+
+void printNewLine()// this function gives a new line on serial monitor
 {
-    while (*str > 0)
-    {
-        uart_txchr(*str++);
-    }
-    
+    while ((UCSR0A & (1<<UDRE0))== 0);
+    UDR0 = '\r';
+    while ((UCSR0A & (1<<UDRE0))== 0);
+    UDR0 = '\n';
 }
 
 char uart_getchar(void)
 {
- while ( !(UCSR0A & (1<<RXC0))); // If not UCSRnA register port RXCn is 1 when and:ing (1<<RXCn) wait.
+ while (!(UCSR0A & (1<<RXC0))); 
+ // If not UCSRnA register port RXCn is 1 when and:ing (1<<RXCn) wait.
 
 /* Get and return received data from buffer */
+  
 return UDR0;
 }
+void uart_getstr(char *buffer)
+{
+    int i = 0;
 
+    buffer[i] = uart_getchar();
+    uart_putchar(buffer[i]);
+    while ((buffer[i] != '\r') & (buffer[i] != '\n')) // while there is no return key pressed go through the input
+    {
+        if (i <= 20) {
+            i++;
+            buffer[i] = uart_getchar();
+        } else {
+            buffer[i] = uart_getchar();
+        }
+        uart_putchar(buffer[i]);
+    }
+    buffer[i] = '\r'; // insert a return to start of array
+    i++;
+    buffer[i] = '\n'; // insert a new line to array
+    buffer[i + 1] = '\0';
+}
 void uart_echo(void)
 {
-
+    uart_putchar(uart_getchar());   
 }

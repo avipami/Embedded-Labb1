@@ -9,8 +9,9 @@
 void uart_init(unsigned int ,int);
 
 void uart_txchr(unsigned char chr);
-void uart_putstr(const char *str);
-
+void uart_ledcontrl(char *str);
+void uart_getstr(char *buffer);
+void printNewLine();
 char uart_getchar(void);
 
 void uart_echo(void);
